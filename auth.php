@@ -1,0 +1,67 @@
+<?php
+require 'connect.php';
+require __DIR__ . '/vendor/autoload.php';
+
+use Firebase\JWT\JWT;
+use Firebase\JWT\KEY;
+use Dotenv\Dotenv;
+
+$dotenv = Dotenv::createImmutable(__DIR__);
+$dotenv->load();
+
+header("Access-Control-Allow-Origin: http://localhost:5173");
+header("Content-Type: application/json");
+header("Access-Control-Allow-Headers: Content-Type, Authorization, Access-Control-Allow-Headers, X-Requested-With");
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+  http_response_code(200);
+  exit;
+}
+
+function getAuthorizationHeader()
+{
+  if (isset($_SERVER['HTTP_AUTHORIZATION'])) {
+    return trim($_SERVER['HTTP_AUTHORIZATION']);
+  }
+  if (function_exists('getallheaders')) {
+    $headers = getallheaders();
+    if (isset($headers['Authorization'])) {
+      return trim($headers['Authorization']);
+    }
+    if (isset($headers['authorization'])) {
+      return trim($headers['authorization']);
+    }
+  }
+  return null;
+}
+
+function getBearerToken()
+{
+  $headers = getAuthorizationHeader();
+  if (!empty($headers)) {
+    if (preg_match('/Bearer\s(\S+)/', $headers, $matches)) {
+      return $matches[1];
+    }
+  }
+  return null;
+}
+
+function requireAuth()
+{
+  global $JWT_SECRET, $JWT_ALGO;
+  $token = getBearerToken();
+  if (!$token) {
+    http_response_code(401);
+    echo json_encode(["status" => "fail", "message" => "Unauthorized: Missing token"]);
+    exit;
+  }
+  try {
+    $decoded = JWT::decode($token, new Key($_ENV['JWT_KEY'], 'HS256'));
+    $GLOBALS['currentUser'] = $decoded;
+    return $GLOBALS['currentUser'];
+  } catch (Exception $e) {
+    http_response_code(401);
+    echo json_encode(["status" => "fail", "message" => "Unauthorized: " . $e->getMessage()]);
+    exit;
+  }
+}
