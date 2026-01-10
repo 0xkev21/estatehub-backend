@@ -1,5 +1,13 @@
 <?php
 header("Access-Control-Allow-Origin: http://localhost:5173");
+header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+  http_response_code(200);
+  exit;
+}
+
 header("Content-Type: application/json");
 
 require 'connect.php';
@@ -12,7 +20,12 @@ if (!$id) {
 }
 
 try {
-  $stmt = $con->prepare("SELECT p.*, t.township, d.district, r.region, pt.propertyType, lt.listingType, l.latitude, l.longitude
+  $stmt = $con->prepare("SELECT p.*, t.township, t.townshipId, 
+                          d.district, d.districtId, 
+                          r.region, r.regionId, 
+                          pt.propertyType, lt.listingType, 
+                          pt.propertyTypeId, lt.listingTypeId,
+                          l.latitude, l.longitude
                           FROM property p
                           JOIN propertyLocation l ON p.locationId = l.locationId
                           JOIN township t ON l.townshipId = t.townshipId

@@ -65,3 +65,38 @@ function requireAuth()
     exit;
   }
 }
+
+
+function requirePaidMember() {
+    global $con;
+    
+    $user = requireAuth();
+    $memberId = $user->id;
+
+    $stmt = $con->prepare("SELECT expireDate FROM member WHERE memberId = ?");
+    $stmt->bind_param("i", $memberId);
+    $stmt->execute();
+    $result = $stmt->get_result()->fetch_assoc();
+
+    // 1. Handle NULL (Never paid / No plan)
+    if (!$result || is_null($result['expireDate'])) {
+        http_response_code(403);
+        echo json_encode(["status" => "fail", "message" => "Membership required to post listings."]);
+        exit;
+    }
+
+    // 2. Handle Expired
+    $expiry = strtotime($result['expireDate']);
+    $today = strtotime(date('Y-m-d'));
+
+    if ($expiry < $today) {
+        http_response_code(403);
+        echo json_encode([
+            "status" => "fail", 
+            "message" => "Your membership expired on " . $result['expireDate'] . ". Please renew."
+        ]);
+        exit;
+    }
+
+    return $user; 
+}

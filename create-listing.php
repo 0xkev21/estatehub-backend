@@ -12,7 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 require 'connect.php';
 require 'auth.php';
 
-$userPayload = requireAuth();
+$userPayload = requirePaidMember();
 $memberId = $userPayload->id ?? 0;
 
 if ($memberId == 0) {
