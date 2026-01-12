@@ -67,36 +67,55 @@ function requireAuth()
 }
 
 
-function requirePaidMember() {
-    global $con;
-    
-    $user = requireAuth();
-    $memberId = $user->id;
+function requirePaidMember()
+{
+  global $con;
 
-    $stmt = $con->prepare("SELECT expireDate FROM member WHERE memberId = ?");
-    $stmt->bind_param("i", $memberId);
-    $stmt->execute();
-    $result = $stmt->get_result()->fetch_assoc();
+  $user = requireAuth();
+  $memberId = $user->id;
 
-    // 1. Handle NULL (Never paid / No plan)
-    if (!$result || is_null($result['expireDate'])) {
-        http_response_code(403);
-        echo json_encode(["status" => "fail", "message" => "Membership required to post listings."]);
-        exit;
-    }
+  $stmt = $con->prepare("SELECT expireDate FROM member WHERE memberId = ?");
+  $stmt->bind_param("i", $memberId);
+  $stmt->execute();
+  $result = $stmt->get_result()->fetch_assoc();
 
-    // 2. Handle Expired
-    $expiry = strtotime($result['expireDate']);
-    $today = strtotime(date('Y-m-d'));
+  // 1. Handle NULL (Never paid / No plan)
+  if (!$result || is_null($result['expireDate'])) {
+    http_response_code(403);
+    echo json_encode(["status" => "fail", "message" => "Membership required to post listings."]);
+    exit;
+  }
 
-    if ($expiry < $today) {
-        http_response_code(403);
-        echo json_encode([
-            "status" => "fail", 
-            "message" => "Your membership expired on " . $result['expireDate'] . ". Please renew."
-        ]);
-        exit;
-    }
+  // 2. Handle Expired
+  $expiry = strtotime($result['expireDate']);
+  $today = strtotime(date('Y-m-d'));
 
-    return $user; 
+  if ($expiry < $today) {
+    http_response_code(403);
+    echo json_encode([
+      "status" => "fail",
+      "message" => "Your membership expired on " . $result['expireDate'] . ". Please renew."
+    ]);
+    exit;
+  }
+
+  return $user;
+}
+
+function requireAdmin()
+{
+  // 1. First, validate the token is valid and not expired
+  $user = requireAuth();
+
+  // 2. Check the 'role' claim we set in admin-login.php
+  if (!isset($user->role) || $user->role !== 'admin') {
+    http_response_code(403); // Forbidden
+    echo json_encode([
+      "status" => "fail",
+      "message" => "Access denied: Admin privileges required."
+    ]);
+    exit;
+  }
+
+  return $user;
 }
