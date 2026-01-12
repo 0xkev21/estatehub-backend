@@ -14,7 +14,7 @@ require_once '../connect.php';
 $admin = requireAdmin();
 
 // Fetch properties with 'pending' status
-$sql = "SELECT p.propertyId, p.title, p.price, d.district, t.township, listingtype,
+$sql = "SELECT p.propertyId, p.listedDate, p.title, p.price, d.district, t.township, listingtype, firstName, lastName,
             (SELECT imagePath FROM propertyimage pi where p.propertyId = pi.propertyId LIMIT 1) as thumbnail
             FROM Property p
             join propertyimage pi on p.propertyId = pi.propertyId
@@ -22,6 +22,7 @@ $sql = "SELECT p.propertyId, p.title, p.price, d.district, t.township, listingty
             join township t on t.townshipId = l.townshipId
             join district d on d.districtId = t.districtId
             join listingtype on listingtype.listingtypeId = p.listingtypeId
+            join member on p.memberId = member.memberId
             WHERE p.status = 'Pending'
             GROUP BY propertyId
             ORDER BY listedDate DESC";

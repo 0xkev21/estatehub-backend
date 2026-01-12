@@ -1,16 +1,5 @@
 <?php
-header("Access-Control-Allow-Origin: http://localhost:5173");
-header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
-
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-  http_response_code(200);
-  exit;
-}
-
-header("Content-Type: application/json");
-
-require 'connect.php';
+require 'auth.php'; // This already includes connect.php and JWT logic
 
 $id = $_GET['id'] ?? null;
 
@@ -39,7 +28,37 @@ try {
   $property = $stmt->get_result()->fetch_assoc();
 
   if (!$property) {
+    http_response_code(404);
     echo json_encode(["status" => "error", "message" => "Property not found"]);
+    exit;
+  }
+
+  // 2. SOFT AUTH: Check if the user is logged in WITHOUT killing the script
+  $token = getBearerToken(); // Function from your auth.php
+  $currentUser = null;
+
+  if ($token) {
+    try {
+      // Reuse the logic from your requireAuth()
+      $currentUser = Firebase\JWT\JWT::decode($token, new Firebase\JWT\Key($_ENV['JWT_KEY'], 'HS256'));
+    } catch (Exception $e) {
+      // Token is invalid/expired, treat as guest
+      $currentUser = null;
+    }
+  }
+
+  // 3. SECURITY LOGIC
+  $isApproved = ($property['status'] === 'approved');
+  $isOwner = ($currentUser && $currentUser->id == $property['memberId']);
+  $isAdmin = ($currentUser && isset($currentUser->role) && $currentUser->role === 'admin');
+
+  // If it's NOT approved, only the Owner or Admin can proceed
+  if (!$isApproved && !$isOwner && !$isAdmin) {
+    http_response_code(403);
+    echo json_encode([
+      "status" => "error",
+      "message" => "This property is pending approval and is not publicly visible."
+    ]);
     exit;
   }
 
@@ -51,7 +70,8 @@ try {
   echo json_encode([
     "status" => "success",
     "data" => $property,
-    "images" => array_column($images, 'imagePath')
+    "images" => array_column($images, 'imagePath'),
+    "isPreview" => ($property['status'] == 'Pending')
   ]);
 } catch (Exception $e) {
   echo json_encode(["status" => "error", "message" => $e->getMessage()]);
