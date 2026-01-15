@@ -1,5 +1,5 @@
 <?php
-require 'auth.php'; // This already includes connect.php and JWT logic
+require 'auth.php';
 
 $id = $_GET['id'] ?? null;
 
@@ -33,26 +33,23 @@ try {
     exit;
   }
 
-  // 2. SOFT AUTH: Check if the user is logged in WITHOUT killing the script
-  $token = getBearerToken(); // Function from your auth.php
+  $token = getBearerToken();
   $currentUser = null;
   $isSaved = false;
 
   if ($token) {
     try {
-      // Reuse the logic from your requireAuth()
       $currentUser = Firebase\JWT\JWT::decode($token, new Firebase\JWT\Key($_ENV['JWT_KEY'], 'HS256'));
       $saveStmt = $con->prepare("SELECT 1 FROM propertysaved WHERE memberId = ? AND propertyId = ?");
       $saveStmt->bind_param("ii", $currentUser->id, $id);
       $saveStmt->execute();
       $isSaved = $saveStmt->get_result()->num_rows > 0;
     } catch (Exception $e) {
-      // Token is invalid/expired, treat as guest
       $currentUser = null;
     }
   }
 
-  // 3. SECURITY LOGIC
+  // SECURITY LOGIC
   $isApproved = ($property['status'] == 'Available');
   $isOwner = ($currentUser && $currentUser->id == $property['memberId']);
   $isAdmin = ($currentUser && isset($currentUser->role) && $currentUser->role === 'admin');

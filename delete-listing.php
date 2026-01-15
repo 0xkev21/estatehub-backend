@@ -12,7 +12,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 require 'connect.php';
 require 'auth.php';
 
-// 1. Authenticate and get user ID
 $userPayload = requireAuth();
 $memberId = $userPayload->id ?? 0;
 $propertyId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
@@ -23,7 +22,7 @@ if ($memberId == 0 || $propertyId == 0) {
   exit;
 }
 
-// 2. Verify Ownership and Get Location ID / Image Paths
+// Verify Ownership and Get Location ID / Image Paths
 $checkSql = "SELECT locationId, memberId FROM Property WHERE propertyId = ?";
 $stmtCheck = $con->prepare($checkSql);
 $stmtCheck->bind_param("i", $propertyId);
@@ -38,11 +37,10 @@ if (!$propData || $propData['memberId'] != $memberId) {
 
 $locationId = $propData['locationId'];
 
-// 3. Start Transaction
 $con->begin_transaction();
 
 try {
-  // A. Fetch and Delete Physical Images
+  // Fetch and Delete Image
   $stmtImgs = $con->prepare("SELECT imagePath FROM PropertyImage WHERE propertyId = ?");
   $stmtImgs->bind_param("i", $propertyId);
   $stmtImgs->execute();
@@ -55,13 +53,13 @@ try {
     }
   }
 
-  // B. Delete Database Records (Child tables first)
+  // Delete Database Records (Child tables first)
   $con->query("DELETE FROM PropertyImage WHERE propertyId = $propertyId");
 
-  // C. Delete the Property
+  // Delete the Property
   $con->query("DELETE FROM Property WHERE propertyId = $propertyId");
 
-  // D. Delete the Location
+  // Delete the Location
   if ($locationId) {
     $con->query("DELETE FROM PropertyLocation WHERE locationId = $locationId");
   }

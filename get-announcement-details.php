@@ -11,7 +11,6 @@ if (!$id) {
 }
 
 try {
-    // Fetch all columns based on your announcement table schema
     $stmt = $con->prepare("SELECT * FROM announcement WHERE announcementId = ?");
     $stmt->bind_param("i", $id);
     $stmt->execute();

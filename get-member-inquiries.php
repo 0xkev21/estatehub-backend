@@ -2,12 +2,11 @@
 require 'connect.php';
 require 'auth.php';
 
-// Authenticate the member
 $userPayload = requireAuth();
 $memberId = $userPayload->id;
 
 try {
-  // Join Inquiry -> Property -> Member to filter by current user
+  // Join Inquiry -> Property -> Member
   $sql = "SELECT i.*, p.title as propertyTitle 
             FROM Inquiry i
             JOIN Property p ON i.propertyId = p.propertyId

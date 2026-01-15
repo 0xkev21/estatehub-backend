@@ -1,9 +1,9 @@
 <?php
-require_once '../auth.php'; // Ensures the admin is logged in
+require_once '../auth.php';
 require_once '../connect.php';
 
-$user = requireAdmin(); // Verify JWT and get admin data
-$adminId = $user->id; // Using object syntax to avoid previous errors
+$user = requireAdmin();
+$adminId = $user->id;
 
 $data = json_decode(file_get_contents("php://input"), true);
 $oldPassword = $data['oldPassword'] ?? '';

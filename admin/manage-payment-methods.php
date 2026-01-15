@@ -18,6 +18,7 @@ try {
 
     $imagePath = $_POST['existingImage'] ?? "";
     if (isset($_FILES['paymentMethodImage'])) {
+
       // Delete old image if updating and a new one is uploaded
       if ($id && !empty($_POST['existingImage'])) {
         $oldFile = '../' . $_POST['existingImage'];
@@ -42,7 +43,7 @@ try {
   } elseif ($method === 'DELETE') {
     $id = $_GET['id'];
 
-    // 1. Fetch the image path before deleting the record
+    // 1. Fetch the image path
     $stmtImg = $con->prepare("SELECT paymentMethodImage FROM PaymentMethod WHERE paymentMethodId = ?");
     $stmtImg->bind_param("i", $id);
     $stmtImg->execute();
@@ -50,7 +51,7 @@ try {
 
     if ($res && !empty($res['paymentMethodImage'])) {
       $filePath = '../' . $res['paymentMethodImage'];
-      // 2. Delete the physical file from the server
+      // 2. Delete the image from the server
       if (file_exists($filePath)) {
         unlink($filePath);
       }

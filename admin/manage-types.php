@@ -1,10 +1,11 @@
 <?php
+header("Access-Control-Allow-Methods: DELETE");
 require_once '../auth.php';
 require_once '../connect.php';
 
 $admin = requireAdmin();
 $method = $_SERVER['REQUEST_METHOD'];
-$type = $_GET['type'] ?? ''; // 'property' or 'listing'
+$type = $_GET['type'] ?? '';
 
 try {
   if ($method === 'GET') {

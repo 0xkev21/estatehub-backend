@@ -1,5 +1,4 @@
 <?php
-// Standard CORS headers
 header("Access-Control-Allow-Origin: http://localhost:5173");
 header("Access-Control-Allow-Methods: GET, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
@@ -13,12 +12,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 require_once '../auth.php';
 require_once '../connect.php';
 
-// Securely check for Admin role using the Bearer token
 $admin = requireAdmin();
 
 // Set headers for CSV download
 header('Content-Type: text/csv; charset=utf-8');
-// Note: filename here is a fallback; the frontend 'a.download' usually takes priority
 header('Content-Disposition: attachment; filename=revenue_report.csv');
 
 $output = fopen('php://output', 'w');

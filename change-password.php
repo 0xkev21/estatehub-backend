@@ -12,11 +12,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 require 'connect.php';
 require 'auth.php';
 
-// 1. Authenticate the member
 $userPayload = requireAuth();
 $memberId = $userPayload->id ?? 0;
 
-// Get the raw POST data (JSON)
 $input = json_decode(file_get_contents("php://input"), true);
 
 $currentPassword = $input['currentPassword'] ?? '';
@@ -29,7 +27,7 @@ if (empty($currentPassword) || empty($newPassword)) {
 }
 
 try {
-  // 2. Fetch the current hashed password from the Member table
+  // Fetch the current hashed password from the Member table
   $stmt = $con->prepare("SELECT password FROM Member WHERE memberId = ?");
   $stmt->bind_param("i", $memberId);
   $stmt->execute();

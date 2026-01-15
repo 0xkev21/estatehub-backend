@@ -19,8 +19,7 @@ try {
                         WHERE pa.approvalId IS NULL");
   $pendingPayments = $res3 ? $res3->fetch_assoc()['total'] : 0;
 
-  // 4. Total Revenue (Joining MemberFee to get the 'amount' column)
-  // Assuming MemberPayment has a 'feeId' column
+  // 4. Total Revenue
   $res4 = $con->query("SELECT SUM(mf.amount) as total 
                         FROM MemberPayment mp 
                         JOIN MemberFee mf ON mp.memberfeeId = mf.memberfeeId

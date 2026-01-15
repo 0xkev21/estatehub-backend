@@ -24,7 +24,6 @@ $fileName = "pay_" . $memberId . "_" . time() . "." . $ext;
 $targetFilePath = $targetDir . $fileName;
 
 if (move_uploaded_file($_FILES['paymentRefImage']['tmp_name'], $targetFilePath)) {
-  // We add memberFeeId to the payment so admin knows what was bought
   $stmt = $con->prepare("INSERT INTO MemberPayment (memberId, paymentDate, paymentMethodId, paymentRefImage, memberFeeId) VALUES (?, ?, ?, ?, ?)");
   $stmt->bind_param("isisi", $memberId, $date, $methodId, $targetFilePath, $feeId);
 

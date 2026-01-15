@@ -4,7 +4,6 @@ header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
 header("Access-Control-Allow-Credentials: true");
 
-// Handle preflight OPTIONS request
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
   http_response_code(200);
   exit;
@@ -13,7 +12,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 require '../auth.php';
 require '../connect.php';
 
-// 1. Verify that the requester is an Admin
 $admin = requireAdmin();
 $adminId = $admin->id;
 
@@ -29,7 +27,6 @@ if (!$paymentId || !$memberId || !$status) {
   exit;
 }
 
-// Start Transaction to ensure data integrity
 $con->begin_transaction();
 
 try {
@@ -48,7 +45,7 @@ try {
     $currentExpiry = $result['expireDate'];
     $today = time();
 
-    // logic: If current plan is still active, add duration to that date.
+    // If current plan is still active, add duration to that date.
     // If expired or never had a plan, add duration to Today.
     if ($currentExpiry && strtotime($currentExpiry) > $today) {
       $baseDate = strtotime($currentExpiry);
@@ -64,7 +61,6 @@ try {
     $stmt->execute();
   } else {
     // Handle Rejection
-    // You might want to add a 'cancelDate' or status to PaymentApproval
     $stmt = $con->prepare("INSERT INTO PaymentApproval (paymentId, adminId, cancelDate) VALUES (?, ?, NOW())");
     $stmt->bind_param("ii", $paymentId, $adminId);
     $stmt->execute();
@@ -73,7 +69,7 @@ try {
   $con->commit();
   echo json_encode(["status" => "success", "message" => "Payment processed successfully"]);
 } catch (Exception $e) {
-  $con->rollback(); // Undo everything if any query fails
+  $con->rollback(); // Undo everything if query fails
   http_response_code(500);
   echo json_encode(["status" => "error", "message" => $e->getMessage()]);
 }

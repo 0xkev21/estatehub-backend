@@ -2,7 +2,7 @@
 require_once '../auth.php';
 require_once '../connect.php';
 
-$admin = requireAdmin(); //
+$admin = requireAdmin();
 
 // 1. Must Have: Lifetime Totals
 $memberCount = $con->query("SELECT COUNT(*) as total FROM member")->fetch_assoc()['total'];
@@ -16,9 +16,9 @@ where approveDate IS NOT NULL")->fetch_assoc()['total'];
 // 2. Should Have: Monthly New Members (Last 6 Months)
 $monthlyMembers = [];
 $memRes = $con->query("SELECT DATE_FORMAT(joinDate, '%b') as month, COUNT(*) as count 
-                       FROM member 
-                       WHERE joinDate >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
-                       GROUP BY MONTH(joinDate) ORDER BY joinDate ASC");
+                      FROM member 
+                      WHERE joinDate >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
+                      GROUP BY MONTH(joinDate) ORDER BY joinDate ASC");
 while ($row = $memRes->fetch_assoc()) $monthlyMembers[] = $row;
 
 // 3. Should Have: Monthly New Listings (Last 6 Months)

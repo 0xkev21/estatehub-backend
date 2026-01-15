@@ -22,7 +22,7 @@ if ($memberId == 0 || $propertyId == 0) {
   exit;
 }
 
-// 1. Ownership & Data Retrieval
+// Ownership & Data Retrieval
 $checkStmt = $con->prepare("SELECT locationId, memberId FROM Property WHERE propertyId = ?");
 $checkStmt->bind_param("i", $propertyId);
 $checkStmt->execute();
@@ -36,7 +36,7 @@ if (!$propData || $propData['memberId'] != $memberId) {
 
 $locationId = $propData['locationId'];
 
-// 2. Sanitize Inputs
+// Sanitize Inputs
 $title = htmlspecialchars(strip_tags($_POST['title']));
 $description = htmlspecialchars(strip_tags($_POST['description'] ?? ''));
 $price = (int)$_POST['price'];
@@ -55,12 +55,12 @@ $con->begin_transaction();
 // file_put_contents('debug.txt', print_r($_POST, true));
 
 try {
-  // 3. Update Location
+  // Update Location
   $stmtLoc = $con->prepare("UPDATE PropertyLocation SET latitude = ?, longitude = ?, townshipId = ? WHERE locationId = ?");
   $stmtLoc->bind_param("ddii", $latitude, $longitude, $townshipId, $locationId);
   $stmtLoc->execute();
 
-  // 4. Update Property
+  // Update Property
   $sqlProp = "UPDATE Property SET 
                 title = ?, description = ?, price = ?, area = ?, 
                 bedrooms = ?, bathrooms = ?, status = ?, 
@@ -70,9 +70,9 @@ try {
   $stmtProp->bind_param("ssiiiiisiii", $title, $description, $price, $area, $bedrooms, $bathrooms, $status, $propertyTypeId, $listingTypeId, $propertyId, $memberId);
   $stmtProp->execute();
 
-  // 5. Manage Images (Delete removed ones)
+  // Manage Images (Delete removed ones)
   if (isset($_POST['keepImages'])) {
-    $keepImages = json_decode($_POST['keepImages'], true); // Array of paths to keep
+    $keepImages = json_decode($_POST['keepImages'], true);
 
     // Find images in DB NOT in keep list
     $imgQuery = $con->prepare("SELECT imagePath FROM PropertyImage WHERE propertyId = ?");
@@ -94,7 +94,7 @@ try {
     }
   }
 
-  // 6. Upload New Images
+  // Upload New Images
   if (!empty($_FILES['images']['name'][0])) {
     $targetDir = "uploads/";
     foreach ($_FILES['images']['tmp_name'] as $key => $tmpName) {

@@ -46,6 +46,7 @@ function getBearerToken()
   return null;
 }
 
+// Genenral Authentication
 function requireAuth()
 {
   global $JWT_SECRET, $JWT_ALGO;
@@ -66,7 +67,7 @@ function requireAuth()
   }
 }
 
-
+// Paid Member
 function requirePaidMember()
 {
   global $con;
@@ -102,12 +103,13 @@ function requirePaidMember()
   return $user;
 }
 
+// Admin
 function requireAdmin()
 {
-  // 1. First, validate the token is valid and not expired
+  // validate the token is valid and not expired
   $user = requireAuth();
 
-  // 2. Check the 'role' claim we set in admin-login.php
+  // Check the 'role'
   if (!isset($user->role) || $user->role !== 'admin') {
     http_response_code(403); // Forbidden
     echo json_encode([

@@ -1,8 +1,7 @@
 <?php
-require_once 'auth.php'; // Ensures valid token
+require_once 'auth.php';
 $user = requireAuth();
 
-// Fetch latest data from DB to ignore stale JWT claims
 $stmt = $con->prepare("SELECT firstName, lastName, email, expireDate FROM member WHERE memberId = ?");
 $stmt->bind_param("i", $user->id);
 $stmt->execute();

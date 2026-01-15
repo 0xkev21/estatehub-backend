@@ -2,9 +2,8 @@
 require_once 'auth.php';
 require_once 'connect.php';
 
-$user = requireAuth(); // Returns an object, not an array
+$user = requireAuth();
 
-// CHANGE THIS LINE: Access property using -> instead of ['']
 $memberId = $user->id;
 
 $data = json_decode(file_get_contents("php://input"), true);

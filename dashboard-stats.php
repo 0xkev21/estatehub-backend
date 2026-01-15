@@ -7,7 +7,6 @@ header("Access-Control-Allow-Headers: Content-Type, Authorization");
 require 'connect.php';
 require 'auth.php';
 
-// Authenticate user
 $userPayload = requireAuth();
 $memberId = $userPayload->id ?? 0;
 
@@ -18,8 +17,7 @@ if ($memberId == 0) {
 }
 
 try {
-    // 1. Fetch Dashboard Statistics
-    // Using exact column names from your DB screenshot: 'status', 'viewCount', 'memberId'
+    // Fetch Dashboard Statistics
     $statsSql = "SELECT 
         COUNT(CASE WHEN status = 'Available' THEN 1 END) as activeListings,
         COUNT(CASE WHEN status = 'Pending' THEN 1 END) as pendingListings,
@@ -33,16 +31,14 @@ try {
     $stmtStats->execute();
     $stats = $stmtStats->get_result()->fetch_assoc();
 
-    // 2. Fetch Membership Expiry
-    // Column name in DB: 'expireDate' (based on UML image_a87689.jpg)
+    // Fetch Membership Expiry
     $memberSql = "SELECT expireDate FROM Member WHERE memberId = ?";
     $stmtMem = $con->prepare($memberSql);
     $stmtMem->bind_param("i", $memberId);
     $stmtMem->execute();
     $memberData = $stmtMem->get_result()->fetch_assoc();
 
-    // 3. Fetch Recent Inquiries
-    // Joins Inquiry to Property using 'propertyId' and 'memberId'
+    // Fetch Recent Inquiries
     $inquirySql = "SELECT i.*, p.title as propertyTitle, pi.imagePath
                 FROM Inquiry i
                 JOIN Property p ON i.propertyId = p.propertyId

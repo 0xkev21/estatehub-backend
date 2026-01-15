@@ -2,8 +2,8 @@
 require_once 'auth.php';
 require_once 'connect.php';
 
-$user = requireAuth(); // Protect the route
-$memberId = $user->id; // Use object syntax to avoid the fatal error
+$user = requireAuth();
+$memberId = $user->id;
 
 try {
   // Join propertysaved with property to get listing details

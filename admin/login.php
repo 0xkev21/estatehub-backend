@@ -10,7 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 require '../connect.php';
-require '../vendor/autoload.php'; // For JWT
+require '../vendor/autoload.php';
 use Firebase\JWT\JWT;
 use Dotenv\Dotenv;
 
@@ -21,7 +21,7 @@ $data = json_decode(file_get_contents("php://input"), true);
 $email = $data['email'] ?? '';
 $password = $data['password'] ?? '';
 
-// 1. Query only the Admin table
+// 1. Query the Admin table
 $stmt = $con->prepare("SELECT adminId, password FROM Admin WHERE email = ?");
 $stmt->bind_param("s", $email);
 $stmt->execute();

@@ -7,7 +7,6 @@ header("Access-Control-Allow-Headers: Content-Type, Authorization");
 require 'connect.php';
 require 'auth.php';
 
-// 1. Authenticate the member
 $userPayload = requireAuth();
 $memberId = $userPayload->id ?? 0;
 
@@ -18,8 +17,6 @@ if ($memberId == 0) {
 }
 
 try {
-  // 2. Prepare SQL query joining Payment, Fee, and Approval tables
-  // We use LEFT JOIN for PaymentApproval because a payment might not be approved yet.
   $sql = "SELECT 
                 mp.paymentId, 
                 mp.paymentDate, 
@@ -43,7 +40,6 @@ try {
     $history[] = $row;
   }
 
-  // 3. Return the data for the MembershipPage table
   echo json_encode($history);
 } catch (Exception $e) {
   http_response_code(500);

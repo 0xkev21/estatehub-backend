@@ -21,7 +21,7 @@ $dotenv->load();
 
 $data = json_decode(file_get_contents("php://input"));
 
-// 1. Validation Check
+// Validation Check
 if (!$data || !isset($data->email) || !isset($data->password)) {
   http_response_code(400);
   echo json_encode(["status" => "fail", "message" => "Invalid input."]);
@@ -31,7 +31,6 @@ if (!$data || !isset($data->email) || !isset($data->password)) {
 $email = $data->email;
 $password = $data->password;
 
-// 2. Exact Column Match
 $stmt = $con->prepare("SELECT memberId, firstName, lastName, email, password FROM Member WHERE email = ?");
 $stmt->bind_param("s", $email);
 $stmt->execute();

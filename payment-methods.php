@@ -4,7 +4,6 @@ header("Content-Type: application/json");
 require 'connect.php';
 
 try {
-    // Select fields based on updated PaymentMethod class
     $query = "SELECT paymentMethodId, paymentMethodName, paymentDescription, paymentMethodImage, paymentNumber FROM PaymentMethod";
     $result = $con->query($query);
     

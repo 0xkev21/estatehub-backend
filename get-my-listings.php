@@ -11,8 +11,6 @@ $userPayload = requireAuth();
 $memberId = $userPayload->id ?? 0;
 
 try {
-    // 1. Refined SQL to match your exact DB columns
-    // We use a LEFT JOIN to ensure properties show up even if they have 0 inquiries
     $sql = "SELECT 
                 p.propertyId, 
                 p.title, 
@@ -29,7 +27,6 @@ try {
 
     $stmt = $con->prepare($sql);
 
-    // 2. Debugging Check: This prevents the "bind_param() on bool" error
     if (!$stmt) {
         throw new Exception("SQL Prepare Failed: " . $con->error);
     }

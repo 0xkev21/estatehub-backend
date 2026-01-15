@@ -25,9 +25,8 @@ try {
           AND p.price BETWEEN ? AND ?";
 
   $params = [$minPrice, $maxPrice];
-  $types = "dd"; // decimal, decimal
+  $types = "dd";
 
-  // Dynamic Keyword Search
   if (!empty($keyword)) {
     $sql .= " AND (p.title LIKE ? OR p.description LIKE ?)";
     $searchTerm = "%$keyword%";
@@ -35,14 +34,13 @@ try {
     $types .= "ss";
   }
 
-  // Dynamic ID Filters
   if (!empty($listingTypeId)) {
-    $sql .= " AND p.listingTypeid = ?";
+    $sql .= " AND p.listingTypeId = ?";
     $params[] = $listingTypeId;
     $types .= "i";
   }
   if (!empty($propertyTypeId)) {
-    $sql .= " AND p.propertyTypeid = ?";
+    $sql .= " AND p.propertyTypeId = ?";
     $params[] = $propertyTypeId;
     $types .= "i";
   }
