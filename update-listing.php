@@ -12,7 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 require 'connect.php';
 require 'auth.php';
 
-$userPayload = requirePaidMember();
+$userPayload = requireAuth();
 $memberId = $userPayload->id ?? 0;
 $propertyId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
@@ -47,8 +47,8 @@ $status = $_POST['status'] ?? 'Available';
 $townshipId = (int)$_POST['townshipId'];
 $propertyTypeId = (int)$_POST['propertytypeId'];
 $listingTypeId = (int)$_POST['listingtypeId'];
-$latitude = isset($_POST['latitude']) ? (float)$_POST['latitude'] : null;
-$longitude = isset($_POST['longitude']) ? (float)$_POST['longitude'] : null;
+$latitude = (isset($_POST['latitude']) && $_POST['latitude'] !== '') ? (float)$_POST['latitude'] : null;
+$longitude = (isset($_POST['longitude']) && $_POST['longitude'] !== '') ? (float)$_POST['longitude'] : null;
 
 $con->begin_transaction();
 
@@ -60,14 +60,27 @@ try {
   $stmtLoc->bind_param("ddii", $latitude, $longitude, $townshipId, $locationId);
   $stmtLoc->execute();
 
-  // Update Property
+  // Update Property and set to 'Pending' for re-approval
   $sqlProp = "UPDATE Property SET 
                 title = ?, description = ?, price = ?, area = ?, 
-                bedrooms = ?, bathrooms = ?, status = ?, 
+                bedrooms = ?, bathrooms = ?, status = 'Pending', 
                 propertyTypeid = ?, listingTypeid = ? 
                 WHERE propertyId = ? AND memberId = ?";
+
   $stmtProp = $con->prepare($sqlProp);
-  $stmtProp->bind_param("ssiiiiisiii", $title, $description, $price, $area, $bedrooms, $bathrooms, $status, $propertyTypeId, $listingTypeId, $propertyId, $memberId);
+  $stmtProp->bind_param(
+    "ssiiiiiiii",
+    $title,
+    $description,
+    $price,
+    $area,
+    $bedrooms,
+    $bathrooms,
+    $propertyTypeId,
+    $listingTypeId,
+    $propertyId,
+    $memberId
+  );
   $stmtProp->execute();
 
   // Manage Images (Delete removed ones)

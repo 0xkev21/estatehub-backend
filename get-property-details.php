@@ -33,6 +33,7 @@ try {
     exit;
   }
 
+  // Auth & Security Check
   $token = getBearerToken();
   $currentUser = null;
   $isSaved = false;
@@ -40,6 +41,8 @@ try {
   if ($token) {
     try {
       $currentUser = Firebase\JWT\JWT::decode($token, new Firebase\JWT\Key($_ENV['JWT_KEY'], 'HS256'));
+
+      // Check if user has saved this property
       $saveStmt = $con->prepare("SELECT 1 FROM propertysaved WHERE memberId = ? AND propertyId = ?");
       $saveStmt->bind_param("ii", $currentUser->id, $id);
       $saveStmt->execute();
@@ -49,7 +52,7 @@ try {
     }
   }
 
-  // SECURITY LOGIC
+  // Security Authorization Logic
   $isApproved = ($property['status'] == 'Available');
   $isOwner = ($currentUser && $currentUser->id == $property['memberId']);
   $isAdmin = ($currentUser && isset($currentUser->role) && $currentUser->role === 'admin');
@@ -64,11 +67,24 @@ try {
     exit;
   }
 
+
+  // Update View Count Logic
+  if ($isApproved && !$isOwner && !$isAdmin) {
+
+    $updateViews = $con->prepare("UPDATE property SET viewCount = viewCount + 1 WHERE propertyId = ?");
+    $updateViews->bind_param("i", $id);
+    $updateViews->execute();
+
+    $property['viewCount'] += 1;
+  }
+
+  // Fetch Images
   $imgStmt = $con->prepare("SELECT imagePath FROM PropertyImage WHERE propertyId = ?");
   $imgStmt->bind_param("i", $id);
   $imgStmt->execute();
   $images = $imgStmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
+  // Final Output
   echo json_encode([
     "status" => "success",
     "data" => $property,
@@ -77,5 +93,6 @@ try {
     "isSaved" => $isSaved
   ]);
 } catch (Exception $e) {
+  http_response_code(500);
   echo json_encode(["status" => "error", "message" => $e->getMessage()]);
 }

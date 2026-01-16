@@ -43,8 +43,8 @@ $listedDate = date('Y-m-d');
 $townshipId = (int)$_POST['townshipId'];
 $propertyTypeId = (int)$_POST['propertyTypeId'];
 $listingTypeId = (int)$_POST['listingTypeId'];
-$latitude = isset($_POST['latitude']) ? (float)$_POST['latitude'] : null;
-$longitude = isset($_POST['longitude']) ? (float)$_POST['longitude'] : null;
+$latitude = (isset($_POST['latitude']) && $_POST['latitude'] !== '') ? (float)$_POST['latitude'] : null;
+$longitude = (isset($_POST['longitude']) && $_POST['longitude'] !== '') ? (float)$_POST['longitude'] : null;
 
 $con->begin_transaction();
 

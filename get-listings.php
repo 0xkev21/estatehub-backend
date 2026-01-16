@@ -7,7 +7,7 @@ header("Access-Control-Allow-Headers: Content-Type, Authorization");
 require 'connect.php';
 
 try {
-  $sql = "SELECT p.propertyId, p.title, p.price, d.district, t.township, listingtype,
+  $sql = "SELECT p.propertyId, p.title, p.price, p.bedrooms, p.bathrooms, p.area, p.viewCount, d.district, t.township, listingtype,
             (SELECT imagePath FROM propertyimage pi where p.propertyId = pi.propertyId LIMIT 1) as thumbnail
             FROM Property p
             join propertylocation l on l.locationId = p.locationId
