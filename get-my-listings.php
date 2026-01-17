@@ -1,5 +1,5 @@
 <?php
-header("Access-Control-Allow-Origin: http://localhost:5173");
+header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json");
 header("Access-Control-Allow-Methods: GET");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
@@ -40,7 +40,6 @@ try {
         "status" => "success",
         "data" => $listings
     ]);
-
 } catch (Exception $e) {
     http_response_code(500);
     echo json_encode(["status" => "fail", "message" => $e->getMessage()]);

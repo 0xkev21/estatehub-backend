@@ -1,5 +1,5 @@
 <?php
-header("Access-Control-Allow-Origin: http://localhost:5173");
+header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: POST, GET, OPTIONS, DELETE, PUT");
 header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
 header("Access-Control-Allow-Credentials: true");
@@ -29,22 +29,44 @@ if ($method === 'GET') {
     echo json_encode(["status" => "success"]);
 } elseif ($method === 'POST' && isset($_POST['_method']) && $_POST['_method'] === 'PUT') {
 
-    // Handle Edit
     $id = $_POST['announcementId'];
     $title = $_POST['title'];
     $desc = $_POST['description'];
     $content = $_POST['announcement'];
 
-    // Update image if new one provided
-    if (isset($_FILES['announcementImage'])) {
-        $sql = "UPDATE announcement SET title=?, description=?, announcement=?, announcementImage=? WHERE announcementId=?";
-        $stmt = $con->prepare($sql);
-        $stmt->bind_param("ssssi", $title, $desc, $content, $newImagePath, $id);
+    if (isset($_FILES['announcementImage']) && $_FILES['announcementImage']['error'] === UPLOAD_ERR_OK) {
+        $targetDir = "../uploads/announcements/";
+        $fileName = time() . '_' . basename($_FILES["announcementImage"]["name"]);
+        $targetFile = $targetDir . $fileName;
+        $dbPath = "uploads/announcements/" . $fileName;
+
+        if (move_uploaded_file($_FILES["announcementImage"]["tmp_name"], $targetFile)) {
+
+            // 2. Delete old physical image from server
+            $oldRes = $con->query("SELECT announcementImage FROM announcement WHERE announcementId = $id");
+            $oldRow = $oldRes->fetch_assoc();
+            if ($oldRow['announcementImage'] && file_exists("../" . $oldRow['announcementImage'])) {
+                unlink("../" . $oldRow['announcementImage']);
+            }
+
+            // 3. Update DB with new image path
+            $sql = "UPDATE announcement SET title=?, description=?, announcement=?, announcementImage=? WHERE announcementId=?";
+            $stmt = $con->prepare($sql);
+            $stmt->bind_param("ssssi", $title, $desc, $content, $dbPath, $id);
+        } else {
+            echo json_encode(["status" => "error", "message" => "File upload failed."]);
+            exit;
+        }
     } else {
+        // No new image provided, keep the existing one in the DB
         $sql = "UPDATE announcement SET title=?, description=?, announcement=? WHERE announcementId=?";
         $stmt = $con->prepare($sql);
         $stmt->bind_param("sssi", $title, $desc, $content, $id);
     }
-    $stmt->execute();
-    echo json_encode(["status" => "success"]);
+
+    if ($stmt->execute()) {
+        echo json_encode(["status" => "success"]);
+    } else {
+        echo json_encode(["status" => "error", "message" => $stmt->error]);
+    }
 }
