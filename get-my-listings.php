@@ -12,7 +12,7 @@ $memberId = $userPayload->id ?? 0;
 
 try {
     $sql = "SELECT 
-                p.propertyId, 
+                p.propertyId,
                 p.title, 
                 p.status, 
                 p.viewCount, 

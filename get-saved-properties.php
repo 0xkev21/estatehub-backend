@@ -8,7 +8,7 @@ $memberId = $user->id;
 try {
   // Join propertysaved with property to get listing details
   $stmt = $con->prepare("
-        SELECT p.propertyId, p.title, p.price, d.district, t.township, listingtype,
+        SELECT p.propertyId, p.title, p.price, d.district, t.township, listingtype, p.bedrooms, p.bathrooms, p.viewCount,
             (SELECT imagePath FROM propertyimage pi where p.propertyId = pi.propertyId LIMIT 1) as thumbnail
             FROM Property p
             join propertylocation l on l.locationId = p.locationId
