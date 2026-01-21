@@ -5,21 +5,21 @@ require '../connect.php';
 $admin = requireAdmin();
 
 try {
-  // 1. Total Members
+  // Total Members
   $res1 = $con->query("SELECT COUNT(*) as total FROM Member");
   $members = $res1 ? $res1->fetch_assoc()['total'] : 0;
 
-  // 2. Pending Listings
+  // Pending Listings
   $res2 = $con->query("SELECT COUNT(*) as total FROM Property WHERE status = 'pending'");
   $pendingListings = $res2 ? $res2->fetch_assoc()['total'] : 0;
 
-  // 3. Count of Pending Payments (Waiting for Admin Approval)
+  // Count of Pending Payments (Waiting for Admin Approval)
   $res3 = $con->query("SELECT COUNT(*) as total FROM MemberPayment mp 
                         LEFT JOIN PaymentApproval pa ON mp.paymentId = pa.paymentId 
                         WHERE pa.approvalId IS NULL");
   $pendingPayments = $res3 ? $res3->fetch_assoc()['total'] : 0;
 
-  // 4. Total Revenue
+  // Total Revenue
   $res4 = $con->query("SELECT SUM(mf.amount) as total 
                         FROM MemberPayment mp 
                         JOIN MemberFee mf ON mp.memberfeeId = mf.memberfeeId

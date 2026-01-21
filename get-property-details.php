@@ -62,7 +62,7 @@ try {
     http_response_code(403);
     echo json_encode([
       "status" => "error",
-      "message" => "This property is pending approval and is not publicly visible."
+      "message" => "This property is not publicly visible."
     ]);
     exit;
   }

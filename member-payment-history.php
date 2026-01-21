@@ -23,7 +23,8 @@ try {
                 mp.paymentRefImage, 
                 mf.description AS feeDescription, 
                 mf.amount, 
-                pa.approveDate
+                pa.approveDate,
+                pa.cancelDate
             FROM MemberPayment mp
             JOIN MemberFee mf ON mp.memberFeeId = mf.memberFeeId
             LEFT JOIN PaymentApproval pa ON mp.paymentId = pa.paymentId

@@ -24,7 +24,7 @@ function dateClause($column, $start, $end, $isAnd = false)
   return ($isAnd ? " AND " : " WHERE ") . $clause;
 }
 
-// --- User & Membership Intelligence ---
+// User & Membership Intelligence
 $memFilter = dateClause('joinDate', $startDate, $endDate);
 $memberStats = $con->query("SELECT 
     COUNT(*) as total,
@@ -32,7 +32,7 @@ $memberStats = $con->query("SELECT
     SUM(CASE WHEN expireDate < NOW() THEN 1 ELSE 0 END) as expired
     FROM member $memFilter")->fetch_assoc();
 
-// --- Property Inventory Analytics ---
+// Property Inventory Analytics
 $propFilter = dateClause('listedDate', $startDate, $endDate);
 $propertyStats = $con->query("SELECT 
     COUNT(*) as total,
@@ -40,31 +40,44 @@ $propertyStats = $con->query("SELECT
     SUM(CASE WHEN status = 'Pending' THEN 1 ELSE 0 END) as pending
     FROM property $propFilter")->fetch_assoc();
 
-// --- Geographic Distribution (Section 2.2) ---
+// Geographic Distribution
 $geoDist = [];
-$geoRes = $con->query("SELECT r.region, COUNT(p.propertyId) as count 
+$geoQuery = "SELECT r.region, COUNT(p.propertyId) as count 
     FROM region r
     LEFT JOIN district d ON r.regionId = d.regionId
     LEFT JOIN township t ON d.districtId = t.districtId
     LEFT JOIN propertylocation pl ON t.townshipId = pl.townshipId
-    LEFT JOIN property p ON pl.locationId = p.locationId
-    GROUP BY r.regionId");
-while ($row = $geoRes->fetch_assoc()) $geoDist[] = $row;
+    LEFT JOIN property p ON pl.locationId = p.locationId 
+    " . (!empty($propFilter) ? str_replace("WHERE", "AND", $propFilter) : "") . "
+    GROUP BY r.regionId order by count desc";
 
-// --- Financial Performance ---
+$geoRes = $con->query($geoQuery);
+while ($row = $geoRes->fetch_assoc()) {
+  $geoDist[] = $row;
+}
+
+// Financial Performance
 $revFilter = dateClause('pa.approveDate', $startDate, $endDate, true);
+
 $revenueRes = $con->query("SELECT 
     pm.paymentMethodName as method, 
-    SUM(mf.amount) as total 
-    FROM memberpayment mp
-    JOIN paymentmethod pm ON mp.paymentMethodId = pm.paymentMethodId
-    JOIN memberfee mf ON mp.memberfeeId = mf.memberfeeId
-    JOIN paymentapproval pa ON mp.paymentId = pa.paymentId
-    WHERE pa.approveDate IS NOT NULL $revFilter
-    GROUP BY pm.paymentMethodId");
-$revenueByMethod = [];
-while ($row = $revenueRes->fetch_assoc()) $revenueByMethod[] = $row;
+    COALESCE(SUM(mf.amount), 0) as total 
+    FROM paymentmethod pm
+    LEFT JOIN memberpayment mp ON pm.paymentMethodId = mp.paymentMethodId
+    LEFT JOIN memberfee mf ON mp.memberfeeId = mf.memberfeeId
+    LEFT JOIN paymentapproval pa ON mp.paymentId = pa.paymentId 
+    AND pa.approveDate IS NOT NULL $revFilter
+    GROUP BY pm.paymentMethodId 
+    ORDER BY total DESC");
 
+$revenueByMethod = [];
+if ($revenueRes) {
+  while ($row = $revenueRes->fetch_assoc()) {
+    $revenueByMethod[] = $row;
+  }
+}
+
+// Popular listings
 $popularListings = [];
 $popRes = $con->query("SELECT propertyId, title, viewCount FROM property $propFilter ORDER BY viewCount DESC LIMIT 5");
 while ($row = $popRes->fetch_assoc()) $popularListings[] = $row;

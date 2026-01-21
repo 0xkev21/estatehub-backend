@@ -1,34 +1,31 @@
 <?php
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
-header("Access-Control-Allow-Credentials: true");
-
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-  http_response_code(200);
-  exit;
-}
-
 require_once '../auth.php';
-require_once '../connect.php';
 
 $admin = requireAdmin();
-$data = json_decode(file_get_contents("php://input"), true);
 
-$propertyId = $data['propertyId'] ?? null;
-$action = $data['status'] ?? '';
+$data = json_decode(file_get_contents("php://input"));
 
-if ($action === 'approved' && $propertyId) {
-  $stmt = $con->prepare("UPDATE Property SET status = 'Available' WHERE propertyId = ?");
-  $stmt->bind_param("i", $propertyId);
+if (isset($data->propertyId) && isset($data->status)) {
+    $propertyId = intval($data->propertyId);
+    $status = $data->status;
+    
+    $validStatuses = ['Pending', 'Available', 'Rejected', 'Sold'];
+    if (!in_array($status, $validStatuses)) {
+        echo json_encode(["status" => "error", "message" => "Invalid status value."]);
+        exit;
+    }
 
-  if ($stmt->execute()) {
-    echo json_encode(["status" => "success", "message" => "Property is now live!"]);
-  } else {
-    http_response_code(500);
-    echo json_encode(["status" => "error", "message" => $con->error]);
-  }
+    $stmt = $con->prepare("UPDATE property SET status = ? WHERE propertyId = ?");
+    $stmt->bind_param("si", $status, $propertyId);
+
+    if ($stmt->execute()) {
+        $logMsg = "Admin updated Property ID $propertyId to status: $status";
+        $con->query("INSERT INTO activity_logs (description, logDate) VALUES ('$logMsg', NOW())");
+        
+        echo json_encode(["status" => "success", "message" => "Status updated to $status"]);
+    } else {
+        echo json_encode(["status" => "error", "message" => "Database update failed."]);
+    }
 } else {
-  http_response_code(400);
-  echo json_encode(["status" => "fail", "message" => "Invalid request"]);
+    echo json_encode(["status" => "error", "message" => "Missing required data."]);
 }
