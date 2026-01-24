@@ -15,7 +15,7 @@ try {
             join district d on d.districtId = t.districtId
             join listingtype on listingtype.listingtypeId = p.listingtypeId
             WHERE p.status = 'Available'
-            ORDER BY listedDate DESC;";
+            ORDER BY listedDate DESC limit 4;";
 
   $stmt = $con->prepare($sql);
 
